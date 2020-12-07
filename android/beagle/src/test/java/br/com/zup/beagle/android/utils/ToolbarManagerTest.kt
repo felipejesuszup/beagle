@@ -38,71 +38,41 @@ import br.com.zup.beagle.android.setup.DesignSystem
 import br.com.zup.beagle.android.testutil.RandomData
 import br.com.zup.beagle.android.view.BeagleActivity
 import br.com.zup.beagle.android.view.custom.BeagleFlexView
-import io.mockk.Runs
-import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.impl.annotations.RelaxedMockK
-import io.mockk.just
-import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.slot
-import io.mockk.spyk
-import io.mockk.unmockkAll
-import io.mockk.verify
+import io.mockk.*
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
 
+@DisplayName("Given a toolbar")
 class ToolbarManagerTest : BaseTest() {
 
-    @MockK
-    private lateinit var screenComponent: ScreenComponent
-
-    @MockK(relaxed = true)
-    private lateinit var navigationBar: NavigationBar
-
-    @RelaxedMockK
-    private lateinit var context: BeagleActivity
-
-    @RelaxedMockK
-    private lateinit var beagleFlexView: BeagleFlexView
-
-    @MockK(relaxed = true)
-    private lateinit var actionBar: ActionBar
-
-    @RelaxedMockK
-    private lateinit var toolbar: Toolbar
-
-    @MockK
-    private lateinit var action: Action
-
-    @RelaxedMockK
-    private lateinit var menu: Menu
-
-    @MockK
-    private lateinit var designSystemMock: DesignSystem
-
-    @MockK
-    private lateinit var navigationIcon: Drawable
-
-    @MockK
-    private lateinit var typedArray: TypedArray
-
-    @MockK
-    private lateinit var icon: Drawable
-
-    @RelaxedMockK
-    private lateinit var resources: Resources
-
+    private var toolbarTextManagerMock = mockk<ToolbarTextManager>()
+    private var screenComponent = mockk<ScreenComponent>()
+    private var action = mockk<Action>()
+    private var designSystemMock = mockk<DesignSystem>()
+    private var navigationIcon = mockk<Drawable>()
+    private var typedArray = mockk<TypedArray>()
+    private var icon = mockk<Drawable>()
+    private var navigationBar = mockk<NavigationBar>(relaxed = true)
+    private var context = mockk<BeagleActivity>(relaxed = true)
+    private var beagleFlexView = mockk<BeagleFlexView>(relaxed = true)
+    private var actionBar = mockk<ActionBar>(relaxed = true)
+    private var toolbar = mockk<Toolbar>(relaxed = true)
+    private var menu = mockk<Menu>(relaxed = true)
+    private var resources = mockk<Resources>(relaxed = true)
     private lateinit var toolbarManager: ToolbarManager
-
     private val style = RandomData.string()
     private val styleInt = RandomData.int()
     private val titleTextAppearance = RandomData.int()
     private val backgroundColorInt = RandomData.int()
     private val listenerSlot = slot<View.OnClickListener>()
+    private val textView: TextView = mockk()
+    private val titleTextAppearanceResourceMock = 2
+    private val centerTextViewMock = mockk<TextView>()
+    val title = RandomData.string()
 
     @BeforeEach
     override fun setUp() {
@@ -127,7 +97,7 @@ class ToolbarManagerTest : BaseTest() {
         } returns false
         every { typedArray.recycle() } just Runs
 
-        toolbarManager = ToolbarManager()
+        toolbarManager = ToolbarManager(toolbarTextManager = toolbarTextManagerMock)
 
         every { toolbar.setNavigationOnClickListener(capture(listenerSlot)) } returns Unit
     }
@@ -210,7 +180,6 @@ class ToolbarManagerTest : BaseTest() {
         every { navigationBar.showBackButton } returns false
         every { toolbar.findViewById<TextView>(any()) } returns mockk()
 
-
         // When
         toolbarManager.configureToolbar(rootView, navigationBar, beagleFlexView, screenComponent)
 
@@ -232,7 +201,6 @@ class ToolbarManagerTest : BaseTest() {
         val menuItem = spyk<MenuItem>()
         every { menu.add(any(), any(), any(), any<String>()) } returns menuItem
         every { toolbar.findViewById<TextView>(any()) } returns mockk()
-
 
         // WHEN
         toolbarManager.configureToolbar(rootView, navigationBar, beagleFlexView, screenComponent)
@@ -268,5 +236,39 @@ class ToolbarManagerTest : BaseTest() {
         // THEN
         verify(exactly = once()) { menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS) }
         verify(exactly = once()) { menuItem.icon = icon }
+    }
+
+    @Test
+    fun `GIVEN a toolbar WHEN I call the function generateCenterTitle THEN the title must be center located on view`() {
+        // Given
+        every { toolbar.findViewById<TextView>(any()) } returns textView
+        every { navigationBar.title } returns title
+        every { beagleSdk.designSystem } returns designSystemMock
+        every { designSystemMock.toolbarStyle(style) } returns styleInt
+        every { navigationBar.styleId } returns style
+        every { context.getToolbar() } returns toolbar
+        every { typedArray.getBoolean(R.styleable.BeagleToolbarStyle_centerTitle, false) } returns true
+        every {
+            typedArray.getResourceId(R.styleable.BeagleToolbarStyle_titleTextAppearance, 0)
+        } returns titleTextAppearanceResourceMock
+        every {
+            toolbarTextManagerMock.generateTitle(context, navigationBar, titleTextAppearanceResourceMock, toolbar)
+        } returns centerTextViewMock
+        every { toolbar.addView(centerTextViewMock) } just runs
+        every { toolbarTextManagerMock.centerTitle(toolbar, centerTextViewMock) } just runs
+
+        // When
+        toolbarManager.configureToolbar(rootView, navigationBar, beagleFlexView, screenComponent)
+
+        // Then
+        verify(exactly = once()) { toolbarTextManagerMock.generateTitle(context, navigationBar, titleTextAppearanceResourceMock, toolbar) }
+        verify(exactly = once()) { toolbar.addView(centerTextViewMock) }
+        verify(exactly = once()) { toolbarTextManagerMock.centerTitle(toolbar, centerTextViewMock) }
+
+        verifyOrder {
+            toolbarTextManagerMock.generateTitle(context, navigationBar, titleTextAppearanceResourceMock, toolbar)
+            toolbar.addView(centerTextViewMock)
+            toolbarTextManagerMock.centerTitle(toolbar, centerTextViewMock)
+        }
     }
 }
