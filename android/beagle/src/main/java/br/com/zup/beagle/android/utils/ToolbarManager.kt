@@ -40,6 +40,12 @@ import br.com.zup.beagle.android.widget.RootView
 
 internal class ToolbarManager(private val toolbarTextManager: ToolbarTextManager = ToolbarTextManager()) {
 
+    companion object {
+        private const val CONTENT_INSET_ZERO = 0
+        private const val CONTENT_INSET_LEFT_ZERO = 0
+        private const val CONTENT_INSET_RIGHT_ZERO = 0
+    }
+
     fun configureNavigationBarForScreen(
         context: BeagleActivity,
         navigationBar: NavigationBar
@@ -99,10 +105,12 @@ internal class ToolbarManager(private val toolbarTextManager: ToolbarTextManager
             )
             removePreviousToolbarTitle(toolbar)
             if (typedArray.getBoolean(R.styleable.BeagleToolbarStyle_centerTitle, false)) {
-                val titleTextView = toolbarTextManager.generateTitle(context, navigationBar, textAppearance, toolbar)
+                val titleTextView = toolbarTextManager.generateTitle(context, navigationBar, textAppearance)
                 toolbar.addView(titleTextView)
                 toolbarTextManager.centerTitle(toolbar, titleTextView)
-                toolbar.title = ""
+                toolbar.title = "title"
+                toolbar.contentInsetStartWithNavigation = CONTENT_INSET_ZERO
+                toolbar.setContentInsetsAbsolute(CONTENT_INSET_LEFT_ZERO, CONTENT_INSET_RIGHT_ZERO)
             } else {
                 toolbar.title = navigationBar.title
                 if (textAppearance != 0) {

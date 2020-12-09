@@ -31,33 +31,28 @@ internal class ToolbarTextManager {
 
     companion object {
         private const val TEXT_APPEARANCE_ZERO = 0
-        private const val CONTENT_INSET_ZERO = 0
-        private const val CONTENT_INSET_LEFT_ZERO = 0
-        private const val CONTENT_INSET_RIGHT_ZERO = 0
     }
 
     fun generateTitle(
         context: Context,
         navigationBar: NavigationBar,
         textAppearance: Int,
-        toolbar: Toolbar
+        id: Int = R.id.beagle_toolbar_text
     ) = TextView(context).apply {
-        id = R.id.beagle_toolbar_text
+        this.id = id
         val params = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
+        )
+        this.layoutParams = params.apply {
             gravity = Gravity.CENTER
             maxLines = 1
             ellipsize = TextUtils.TruncateAt.END
         }
-        layoutParams = params
         text = navigationBar.title
         if (textAppearance != TEXT_APPEARANCE_ZERO) {
             TextViewCompat.setTextAppearance(this, textAppearance)
         }
-        toolbar.contentInsetStartWithNavigation = CONTENT_INSET_ZERO
-        toolbar.setContentInsetsAbsolute(CONTENT_INSET_LEFT_ZERO, CONTENT_INSET_RIGHT_ZERO)
     }
 
     fun centerTitle(

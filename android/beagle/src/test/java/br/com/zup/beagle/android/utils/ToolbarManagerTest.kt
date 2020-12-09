@@ -70,8 +70,8 @@ class ToolbarManagerTest : BaseTest() {
     private val backgroundColorInt = RandomData.int()
     private val listenerSlot = slot<View.OnClickListener>()
     private val textView: TextView = mockk()
-    private val titleTextAppearanceResourceMock = 2
-    private val centerTextViewMock = mockk<TextView>()
+    private val textAppearanceMock = 1
+    private val textViewMock = mockk<TextView>()
     val title = RandomData.string()
 
     @BeforeEach
@@ -239,7 +239,7 @@ class ToolbarManagerTest : BaseTest() {
     }
 
     @Test
-    fun `GIVEN a toolbar WHEN I call the function generateCenterTitle THEN the title must be center located on view`() {
+    fun `should be call the configureToolbar method to generate the title`() {
         // Given
         every { toolbar.findViewById<TextView>(any()) } returns textView
         every { navigationBar.title } returns title
@@ -250,25 +250,19 @@ class ToolbarManagerTest : BaseTest() {
         every { typedArray.getBoolean(R.styleable.BeagleToolbarStyle_centerTitle, false) } returns true
         every {
             typedArray.getResourceId(R.styleable.BeagleToolbarStyle_titleTextAppearance, 0)
-        } returns titleTextAppearanceResourceMock
+        } returns textAppearanceMock
         every {
-            toolbarTextManagerMock.generateTitle(context, navigationBar, titleTextAppearanceResourceMock, toolbar)
-        } returns centerTextViewMock
-        every { toolbar.addView(centerTextViewMock) } just runs
-        every { toolbarTextManagerMock.centerTitle(toolbar, centerTextViewMock) } just runs
+            toolbarTextManagerMock.generateTitle(context, navigationBar, textAppearanceMock)
+        } returns textViewMock
+        every { toolbar.addView(textViewMock) } just runs
+        every { toolbarTextManagerMock.centerTitle(toolbar, textViewMock) } just runs
 
         // When
         toolbarManager.configureToolbar(rootView, navigationBar, beagleFlexView, screenComponent)
 
         // Then
-        verify(exactly = once()) { toolbarTextManagerMock.generateTitle(context, navigationBar, titleTextAppearanceResourceMock, toolbar) }
-        verify(exactly = once()) { toolbar.addView(centerTextViewMock) }
-        verify(exactly = once()) { toolbarTextManagerMock.centerTitle(toolbar, centerTextViewMock) }
-
-        verifyOrder {
-            toolbarTextManagerMock.generateTitle(context, navigationBar, titleTextAppearanceResourceMock, toolbar)
-            toolbar.addView(centerTextViewMock)
-            toolbarTextManagerMock.centerTitle(toolbar, centerTextViewMock)
-        }
+        verify(exactly = once()) { toolbarTextManagerMock.generateTitle(context, navigationBar, textAppearanceMock) }
+        verify(exactly = once()) { toolbar.addView(textViewMock) }
+        verify(exactly = once()) { toolbarTextManagerMock.centerTitle(toolbar, textViewMock) }
     }
 }
